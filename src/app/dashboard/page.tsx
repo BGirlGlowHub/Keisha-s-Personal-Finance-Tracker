@@ -176,12 +176,19 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Financial Summary Cards */}
         {summary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
             <div className="card">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Income</p>
+                  <p className="text-sm text-gray-600">Gross Income (This Month)</p>
                   <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.totalIncome)}</p>
+                  <p className="text-xs text-gray-500">
+                    {settings.payDates?.filter(date => {
+                      const payDate = new Date(date + 'T00:00:00')
+                      const current = new Date()
+                      return payDate.getMonth() === current.getMonth() && payDate.getFullYear() === current.getFullYear()
+                    }).length || 0} paychecks
+                  </p>
                 </div>
                 <div className="text-3xl">💰</div>
               </div>
@@ -232,7 +239,35 @@ export default function DashboardPage() {
             <div className="card">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Available Balance</p>
+                  <p className="text-sm text-gray-600">After Tithing & Savings</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {formatCurrency(summary.totalIncome - summary.totalTithing - (summary.totalIncome * settings.emergencyFundPercentage / 100))}
+                  </p>
+                  <p className="text-xs text-gray-500">Available for bills & expenses</p>
+                </div>
+                <div className="text-3xl">📊</div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Pocket Money</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {formatCurrency((summary.totalIncome * settings.pocketMoneyPercentage) / 100)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formatPercentage(settings.pocketMoneyPercentage)} personal spending
+                  </p>
+                </div>
+                <div className="text-3xl">💸</div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Unallocated</p>
                   <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.remainingBalance)}</p>
                   <p className="text-xs text-gray-500">
                     {formatPercentage(100 - summary.allocationPercentage)} remaining
