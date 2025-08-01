@@ -72,35 +72,44 @@ export const generatePayPeriods = (
   return payDates
 }
 
-// Calculate income for specific month based on next pay date
-export const calculateCurrentMonthIncome = (
-  paycheckAmount: number, 
-  frequency: string, 
-  payDates: string[],
-  nextPayDate: string = ''
-): number => {
-  const currentMonth = new Date().getMonth()
-  const currentYear = new Date().getFullYear()
-  
-  // Generate pay periods if we have nextPayDate but no payDates array
-  let actualPayDates = payDates
-  if (payDates.length === 0 && nextPayDate) {
-    actualPayDates = generatePayPeriods(nextPayDate, frequency)
+// Calculate income for specific month based on next pay
+  date
+  export const calculateCurrentMonthIncome = (
+    paycheckAmount: number,
+    frequency: string,
+    payDates: string[],
+    nextPayDate: string = ''
+  ): number => {
+    // If no next pay date, use old calculation
+    if (!nextPayDate) {
+      return calculateMonthlyIncome(paycheckAmount,
+  frequency)
+    }
+
+    // Only handle bi-weekly for now
+    if (frequency !== 'bi-weekly') {
+      return calculateMonthlyIncome(paycheckAmount,
+  frequency)
+    }
+
+    // Use the helper logic you got - count paychecks in
+  current month
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+
+    let paychecks = 0
+    let date = new Date(nextPayDate + 'T00:00:00')
+
+    // Count paychecks in current month
+    while (date.getFullYear() === currentYear &&
+  date.getMonth() === currentMonth) {
+      paychecks++
+      date.setDate(date.getDate() + 14) // Add 14 days for
+  bi-weekly
+    }
+
+    return paychecks * paycheckAmount
   }
-  
-  // Count paychecks in current month
-  const paychecksThisMonth = actualPayDates.filter(dateStr => {
-    const payDate = new Date(dateStr + 'T00:00:00')
-    return payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear
-  }).length
-  
-  // If no pay dates available, fall back to average calculation
-  if (actualPayDates.length === 0) {
-    return calculateMonthlyIncome(paycheckAmount, frequency)
-  }
-  
-  return paycheckAmount * paychecksThisMonth
-}
 
 // Get pay period breakdown for display
 export const getPayPeriodBreakdown = (
