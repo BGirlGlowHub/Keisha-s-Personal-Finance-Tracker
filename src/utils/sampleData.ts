@@ -17,7 +17,7 @@ export const loadSampleData = () => {
     pocketMoneyPercentage: 10, // 10% for personal spending
     paycheckAmount: 1500, // Bi-weekly paycheck (updated to match your example)
     payFrequency: 'bi-weekly',
-    nextPayDate: '2024-08-15',
+    nextPayDate: '2024-08-01',
     payDates: ['2024-08-01', '2024-08-15', '2024-08-29'] // 3 paychecks in August
   }
 
