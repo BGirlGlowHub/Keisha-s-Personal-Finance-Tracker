@@ -213,7 +213,7 @@ export default function SetupPage() {
           <div className="text-right min-w-[80px]">
             <div className="text-lg font-semibold">{settings.tithingPercentage}%</div>
             <div className="text-sm text-gray-500">
-              ${(settings.paycheckAmount * settings.tithingPercentage / 100).toFixed(0)}
+              ${((settings.paycheckAmount * settings.tithingPercentage) / 100).toFixed(0)}
             </div>
           </div>
         </div>
@@ -421,7 +421,7 @@ export default function SetupPage() {
     </div>
   )
 
-  // POCKET MONEY STEP
+  // POCKET MONEY STEP (fixed for build error)
   const renderPocketMoneyStep = () => (
     <div className="max-w-xl mx-auto">
       <h2 className="text-3xl font-bold text-center mb-6">
@@ -442,7 +442,7 @@ export default function SetupPage() {
             min="0"
             max="20"
             step="0.5"
-            value={settings.pocketMoneyPercentage}
+            value={settings.pocketMoneyPercentage ?? 0}
             onChange={(e) =>
               updateSettings({ pocketMoneyPercentage: parseFloat(e.target.value) })
             }
@@ -450,10 +450,10 @@ export default function SetupPage() {
           />
           <div className="text-right min-w-[80px]">
             <div className="text-lg font-semibold">
-              {settings.pocketMoneyPercentage}%
+              {settings.pocketMoneyPercentage ?? 0}%
             </div>
             <div className="text-sm text-gray-500">
-              ${((settings.paycheckAmount * settings.pocketMoneyPercentage) / 100).toFixed(0)}
+              ${((settings.paycheckAmount * (settings.pocketMoneyPercentage ?? 0)) / 100).toFixed(0)}
             </div>
           </div>
         </div>
