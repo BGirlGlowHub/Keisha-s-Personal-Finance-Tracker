@@ -254,10 +254,10 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm text-gray-600">Pocket Money</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {formatCurrency((summary.totalIncome * settings.pocketMoneyPercentage) / 100)}
+                    {formatCurrency((summary.totalIncome * (settings.pocketMoneyPercentage || 0)) / 100)}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {formatPercentage(settings.pocketMoneyPercentage)} personal spending
+                    {formatPercentage(settings.pocketMoneyPercentage || 0)} personal spending
                   </p>
                 </div>
                 <div className="text-3xl">💸</div>
