@@ -33,27 +33,103 @@ export const calculateMonthlyIncome = (paycheckAmount: number, frequency: string
   }
 }
 
-// Calculate income for specific month based on actual paycheck dates
+// Generate pay periods based on next pay date and frequency
+export const generatePayPeriods = (
+  nextPayDate: string,
+  frequency: string,
+  numberOfPeriods: number = 12
+): string[] => {
+  if (!nextPayDate) return []
+  
+  const payDates: string[] = []
+  let currentDate = new Date(nextPayDate + 'T00:00:00')
+  
+  for (let i = 0; i < numberOfPeriods; i++) {
+    payDates.push(currentDate.toISOString().split('T')[0])
+    
+    // Calculate next pay date based on frequency
+    switch (frequency) {
+      case 'weekly':
+        currentDate.setDate(currentDate.getDate() + 7)
+        break
+      case 'bi-weekly':
+        currentDate.setDate(currentDate.getDate() + 14)
+        break
+      case 'semi-monthly':
+        // Semi-monthly is tricky - typically 15th and last day of month
+        if (currentDate.getDate() <= 15) {
+          currentDate.setMonth(currentDate.getMonth(), 0) // Last day of month
+        } else {
+          currentDate.setMonth(currentDate.getMonth() + 1, 15) // 15th of next month
+        }
+        break
+      case 'monthly':
+        currentDate.setMonth(currentDate.getMonth() + 1)
+        break
+    }
+  }
+  
+  return payDates
+}
+
+// Calculate income for specific month based on next pay date
 export const calculateCurrentMonthIncome = (
   paycheckAmount: number, 
   frequency: string, 
-  payDates: string[]
+  payDates: string[],
+  nextPayDate: string = ''
 ): number => {
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
   
+  // Generate pay periods if we have nextPayDate but no payDates array
+  let actualPayDates = payDates
+  if (payDates.length === 0 && nextPayDate) {
+    actualPayDates = generatePayPeriods(nextPayDate, frequency)
+  }
+  
   // Count paychecks in current month
-  const paychecksThisMonth = payDates.filter(dateStr => {
+  const paychecksThisMonth = actualPayDates.filter(dateStr => {
     const payDate = new Date(dateStr + 'T00:00:00')
     return payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear
   }).length
   
-  // If no payDates provided, fall back to average calculation
-  if (payDates.length === 0) {
+  // If no pay dates available, fall back to average calculation
+  if (actualPayDates.length === 0) {
     return calculateMonthlyIncome(paycheckAmount, frequency)
   }
   
   return paycheckAmount * paychecksThisMonth
+}
+
+// Get pay period breakdown for display
+export const getPayPeriodBreakdown = (
+  paycheckAmount: number,
+  frequency: string,
+  nextPayDate: string,
+  monthsToShow: number = 3
+): { month: string; payPeriods: number; totalIncome: number; dates: string[] }[] => {
+  if (!nextPayDate) return []
+  
+  const payDates = generatePayPeriods(nextPayDate, frequency, monthsToShow * 6) // Generate enough periods
+  const breakdown: { [key: string]: { payPeriods: number; totalIncome: number; dates: string[] } } = {}
+  
+  payDates.forEach(dateStr => {
+    const payDate = new Date(dateStr + 'T00:00:00')
+    const monthKey = payDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    
+    if (!breakdown[monthKey]) {
+      breakdown[monthKey] = { payPeriods: 0, totalIncome: 0, dates: [] }
+    }
+    
+    breakdown[monthKey].payPeriods++
+    breakdown[monthKey].totalIncome += paycheckAmount
+    breakdown[monthKey].dates.push(dateStr)
+  })
+  
+  return Object.entries(breakdown)
+    .slice(0, monthsToShow)
+    .map(([month, data]) => ({ month, ...data }))
 }
 
 export const calculateFinancialSummary = (
@@ -64,7 +140,7 @@ export const calculateFinancialSummary = (
   const activeAccounts = accounts.filter(account => account.isActive)
   const activeBills = bills.filter(bill => bill.isActive)
   
-  const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [])
+  const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [], settings.nextPayDate)
   const totalBills = calculateTotalBillsAmount(activeBills)
   const totalAllocated = calculateTotalAccountPercentages(activeAccounts)
   
