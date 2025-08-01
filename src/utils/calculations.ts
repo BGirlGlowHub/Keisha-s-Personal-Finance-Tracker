@@ -40,13 +40,13 @@ export const generatePayPeriods = (
   numberOfPeriods: number = 12
 ): string[] => {
   if (!nextPayDate) return []
-  
+
   const payDates: string[] = []
   let currentDate = new Date(nextPayDate + 'T00:00:00')
-  
+
   for (let i = 0; i < numberOfPeriods; i++) {
     payDates.push(currentDate.toISOString().split('T')[0])
-    
+
     // Calculate next pay date based on frequency
     switch (frequency) {
       case 'weekly':
@@ -56,7 +56,7 @@ export const generatePayPeriods = (
         currentDate.setDate(currentDate.getDate() + 14)
         break
       case 'semi-monthly':
-        // Semi-monthly is tricky - typically 15th and last day of month
+        // Semi-monthly is typically 15th and last day of month
         if (currentDate.getDate() <= 15) {
           currentDate.setMonth(currentDate.getMonth(), 0) // Last day of month
         } else {
@@ -68,48 +68,42 @@ export const generatePayPeriods = (
         break
     }
   }
-  
+
   return payDates
 }
 
-// Calculate income for specific month based on next pay
-  date
-  export const calculateCurrentMonthIncome = (
-    paycheckAmount: number,
-    frequency: string,
-    payDates: string[],
-    nextPayDate: string = ''
-  ): number => {
-    // If no next pay date, use old calculation
-    if (!nextPayDate) {
-      return calculateMonthlyIncome(paycheckAmount,
-  frequency)
-    }
-
-    // Only handle bi-weekly for now
-    if (frequency !== 'bi-weekly') {
-      return calculateMonthlyIncome(paycheckAmount,
-  frequency)
-    }
-
-    // Use the helper logic you got - count paychecks in
-  current month
-    const currentMonth = new Date().getMonth()
-    const currentYear = new Date().getFullYear()
-
-    let paychecks = 0
-    let date = new Date(nextPayDate + 'T00:00:00')
-
-    // Count paychecks in current month
-    while (date.getFullYear() === currentYear &&
-  date.getMonth() === currentMonth) {
-      paychecks++
-      date.setDate(date.getDate() + 14) // Add 14 days for
-  bi-weekly
-    }
-
-    return paychecks * paycheckAmount
+// Calculate income for specific month based on next pay date
+export const calculateCurrentMonthIncome = (
+  paycheckAmount: number,
+  frequency: string,
+  payDates: string[],
+  nextPayDate: string = ''
+): number => {
+  // If no next pay date, use old calculation
+  if (!nextPayDate) {
+    return calculateMonthlyIncome(paycheckAmount, frequency)
   }
+
+  // Only handle bi-weekly for now
+  if (frequency !== 'bi-weekly') {
+    return calculateMonthlyIncome(paycheckAmount, frequency)
+  }
+
+  // Count paychecks in current month
+  const currentMonth = new Date().getMonth()
+  const currentYear = new Date().getFullYear()
+
+  let paychecks = 0
+  let date = new Date(nextPayDate + 'T00:00:00')
+
+  // Count paychecks in current month
+  while (date.getFullYear() === currentYear && date.getMonth() === currentMonth) {
+    paychecks++
+    date.setDate(date.getDate() + 14) // Add 14 days for bi-weekly
+  }
+
+  return paychecks * paycheckAmount
+}
 
 // Get pay period breakdown for display
 export const getPayPeriodBreakdown = (
@@ -119,23 +113,23 @@ export const getPayPeriodBreakdown = (
   monthsToShow: number = 3
 ): { month: string; payPeriods: number; totalIncome: number; dates: string[] }[] => {
   if (!nextPayDate) return []
-  
+
   const payDates = generatePayPeriods(nextPayDate, frequency, monthsToShow * 6) // Generate enough periods
   const breakdown: { [key: string]: { payPeriods: number; totalIncome: number; dates: string[] } } = {}
-  
+
   payDates.forEach(dateStr => {
     const payDate = new Date(dateStr + 'T00:00:00')
     const monthKey = payDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    
+
     if (!breakdown[monthKey]) {
       breakdown[monthKey] = { payPeriods: 0, totalIncome: 0, dates: [] }
     }
-    
+
     breakdown[monthKey].payPeriods++
     breakdown[monthKey].totalIncome += paycheckAmount
     breakdown[monthKey].dates.push(dateStr)
   })
-  
+
   return Object.entries(breakdown)
     .slice(0, monthsToShow)
     .map(([month, data]) => ({ month, ...data }))
@@ -148,22 +142,22 @@ export const calculateFinancialSummary = (
 ): FinancialSummary => {
   const activeAccounts = accounts.filter(account => account.isActive)
   const activeBills = bills.filter(bill => bill.isActive)
-  
+
   const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [], settings.nextPayDate)
   const totalBills = calculateTotalBillsAmount(activeBills)
   const totalAllocated = calculateTotalAccountPercentages(activeAccounts)
-  
+
   const tithingAccounts = activeAccounts.filter(account => account.category === 'tithing')
   const savingsAccounts = activeAccounts.filter(account => account.category === 'savings')
-  
-  const totalTithing = tithingAccounts.reduce((sum, account) => 
+
+  const totalTithing = tithingAccounts.reduce((sum, account) =>
     sum + ((monthlyIncome * account.payrollPercentage) / 100), 0)
-  
-  const totalSavings = savingsAccounts.reduce((sum, account) => 
+
+  const totalSavings = savingsAccounts.reduce((sum, account) =>
     sum + ((monthlyIncome * account.payrollPercentage) / 100), 0)
-  
+
   const remainingBalance = monthlyIncome - (monthlyIncome * totalAllocated / 100)
-  
+
   return {
     totalIncome: monthlyIncome,
     totalAllocated: (monthlyIncome * totalAllocated) / 100,
@@ -180,30 +174,30 @@ export const calculateOptimalPercentages = (
   settings: StewardshipSettings
 ): { accountId: string; percentage: number }[] => {
   const { paycheckAmount, tithingEnabled, tithingPercentage, emergencyFundPercentage } = settings
-  
+
   let remainingPercentage = 100
   const allocations: { accountId: string; percentage: number }[] = []
-  
+
   // First priority: Tithing (if enabled)
   if (tithingEnabled) {
     allocations.push({ accountId: 'tithing', percentage: tithingPercentage })
     remainingPercentage -= tithingPercentage
   }
-  
+
   // Second priority: Emergency fund/savings
   allocations.push({ accountId: 'emergency', percentage: emergencyFundPercentage })
   remainingPercentage -= emergencyFundPercentage
-  
+
   // Third priority: Bills (distributed based on amount)
   const activeBills = bills.filter(bill => bill.isActive)
   const totalBillsAmount = calculateTotalBillsAmount(activeBills)
-  
+
   activeBills.forEach(bill => {
     const billPercentage = calculateBillPercentage(bill.amount, paycheckAmount)
     allocations.push({ accountId: bill.accountId, percentage: billPercentage })
     remainingPercentage -= billPercentage
   })
-  
+
   return allocations
 }
 
@@ -223,7 +217,7 @@ export const validateBudgetBalance = (
   settings: StewardshipSettings
 ): { isValid: boolean; totalPercentage: number; message: string } => {
   const totalPercentage = calculateTotalAccountPercentages(accounts)
-  
+
   if (totalPercentage > 100) {
     return {
       isValid: false,
@@ -231,7 +225,7 @@ export const validateBudgetBalance = (
       message: `Budget exceeds 100% by ${formatPercentage(totalPercentage - 100)}. Please reduce allocations.`
     }
   }
-  
+
   if (totalPercentage > 95) {
     return {
       isValid: true,
@@ -239,7 +233,7 @@ export const validateBudgetBalance = (
       message: `Budget uses ${formatPercentage(totalPercentage)} of income. Consider leaving more buffer.`
     }
   }
-  
+
   return {
     isValid: true,
     totalPercentage,
@@ -281,62 +275,62 @@ export const calculateDebtAvalanche = (debts: any[], extraPayment: number = 0): 
 }
 
 export const calculateDebtPayoffStrategy = (
-  sortedDebts: any[], 
-  extraPayment: number, 
+  sortedDebts: any[],
+  extraPayment: number,
   strategyName: string
 ): DebtPayoffStrategy => {
   const workingDebts = sortedDebts.map(debt => ({
     ...debt,
     remainingBalance: debt.currentBalance
   }))
-  
+
   const timeline: { month: number; debtId: string; remainingBalance: number }[] = []
   const monthlyPayments: { debtId: string; payment: number }[] = []
   let totalInterest = 0
   let month = 0
   let availableExtraPayment = extraPayment
-  
+
   // Initialize minimum payments
   workingDebts.forEach(debt => {
     monthlyPayments.push({ debtId: debt.id, payment: debt.minimumPayment })
   })
-  
+
   while (workingDebts.some(debt => debt.remainingBalance > 0)) {
     month++
     let freedUpPayment = 0
-    
+
     workingDebts.forEach((debt, index) => {
       if (debt.remainingBalance <= 0) return
-      
+
       // Calculate interest for this month
       const monthlyInterest = (debt.remainingBalance * debt.interestRate / 100) / 12
       totalInterest += monthlyInterest
-      
+
       // Determine payment amount
       let payment = debt.minimumPayment
-      
+
       // Add extra payment to first unpaid debt (following strategy order)
       if (index === workingDebts.findIndex(d => d.remainingBalance > 0)) {
         payment += availableExtraPayment + freedUpPayment
       }
-      
+
       // Don't pay more than remaining balance
       payment = Math.min(payment, debt.remainingBalance + monthlyInterest)
-      
+
       // Apply payment
       debt.remainingBalance = Math.max(0, debt.remainingBalance + monthlyInterest - payment)
-      
+
       // Track payment for this debt
       const existingPayment = monthlyPayments.find(p => p.debtId === debt.id)
       if (existingPayment && month === 1) {
         existingPayment.payment = payment
       }
-      
+
       // If debt is paid off, free up its minimum payment
       if (debt.remainingBalance <= 0) {
         freedUpPayment += debt.minimumPayment
       }
-      
+
       timeline.push({
         month,
         debtId: debt.id,
@@ -344,7 +338,7 @@ export const calculateDebtPayoffStrategy = (
       })
     })
   }
-  
+
   return {
     strategyName,
     totalInterest,
@@ -357,12 +351,12 @@ export const calculateDebtPayoffStrategy = (
 // Helper functions for debt calculations
 export const calculatePayoffTime = (balance: number, monthlyPayment: number, interestRate: number): number => {
   if (monthlyPayment <= 0 || balance <= 0) return 0
-  
+
   const monthlyInterestRate = interestRate / 100 / 12
   if (monthlyInterestRate <= 0) {
     return Math.ceil(balance / monthlyPayment)
   }
-  
+
   const months = -Math.log(1 - (balance * monthlyInterestRate) / monthlyPayment) / Math.log(1 + monthlyInterestRate)
   return Math.ceil(months)
 }
@@ -378,10 +372,10 @@ export const calculateExtraPaymentImpact = (
 ): { savedInterest: number; savedTime: number; newPayoffTime: number } => {
   const originalPayoff = calculatePayoffTime(debt.currentBalance, debt.minimumPayment, debt.interestRate)
   const originalInterest = calculateTotalInterest(debt.currentBalance, debt.minimumPayment, debt.interestRate)
-  
+
   const newPayoff = calculatePayoffTime(debt.currentBalance, debt.minimumPayment + extraPayment, debt.interestRate)
   const newInterest = calculateTotalInterest(debt.currentBalance, debt.minimumPayment + extraPayment, debt.interestRate)
-  
+
   return {
     savedInterest: originalInterest - newInterest,
     savedTime: originalPayoff - newPayoff,
@@ -407,7 +401,7 @@ export const calculateAccountBalances = (
   settings: any
 ): AccountBalanceInfo[] => {
   const monthlyIncome = calculateMonthlyIncome(settings.paycheckAmount, settings.payFrequency)
-  
+
   return accounts.map(account => {
     const accountBills = bills.filter(bill => bill.accountId === account.id && bill.isActive)
     const monthlyInflow = (monthlyIncome * account.payrollPercentage) / 100
@@ -433,10 +427,10 @@ export const calculateAccountBalances = (
       }
       return sum + monthlyAmount
     }, 0)
-    
+
     const endingBalance = account.currentBalance + monthlyInflow - monthlyOutflow
     const utilization = monthlyInflow > 0 ? (monthlyOutflow / monthlyInflow) * 100 : 0
-    
+
     return {
       accountId: account.id,
       accountName: account.nickname,
@@ -455,7 +449,7 @@ export const getBudgetRecommendations = (
   totalAllocated: number
 ): { type: 'error' | 'warning' | 'suggestion'; message: string; action?: string }[] => {
   const recommendations = []
-  
+
   if (totalAllocated > 100) {
     recommendations.push({
       type: 'error' as const,
@@ -463,7 +457,7 @@ export const getBudgetRecommendations = (
       action: 'Reduce account percentages or increase income'
     })
   }
-  
+
   if (totalAllocated > 95 && totalAllocated <= 100) {
     recommendations.push({
       type: 'warning' as const,
@@ -471,7 +465,7 @@ export const getBudgetRecommendations = (
       action: 'Reduce some account percentages to leave 5-10% buffer'
     })
   }
-  
+
   if (totalAllocated < 80) {
     recommendations.push({
       type: 'suggestion' as const,
@@ -479,7 +473,7 @@ export const getBudgetRecommendations = (
       action: 'Consider increasing savings, emergency fund, or debt payments'
     })
   }
-  
+
   // Check for accounts with very high utilization
   const accountBalances = calculateAccountBalances(accounts, [], { paycheckAmount: 1000, payFrequency: 'bi-weekly' })
   accountBalances.forEach(balance => {
@@ -491,7 +485,7 @@ export const getBudgetRecommendations = (
       })
     }
   })
-  
+
   return recommendations
 }
 
@@ -513,32 +507,32 @@ export const getDebtReductionSuggestions = (
 ): DebtReductionSuggestion[] => {
   const suggestions: DebtReductionSuggestion[] = []
   const monthlyIncome = calculateMonthlyIncome(settings.paycheckAmount, settings.payFrequency)
-  
+
   // Categorize bills by negotiability
   const billCategories = {
     'non-negotiable': {
       categories: ['Housing', 'Utilities', 'Transportation', 'Insurance'],
-      bills: bills.filter(bill => 
+      bills: bills.filter(bill =>
         ['Housing', 'Utilities', 'Transportation', 'Insurance'].includes(bill.category) &&
-        !['Netflix', 'Spotify', 'Gym', 'Entertainment'].some(keyword => 
+        !['Netflix', 'Spotify', 'Gym', 'Entertainment'].some(keyword =>
           bill.name.toLowerCase().includes(keyword.toLowerCase())
         )
       )
     },
     'negotiable': {
       categories: ['Entertainment', 'Subscriptions', 'Dining', 'Shopping'],
-      bills: bills.filter(bill => 
+      bills: bills.filter(bill =>
         ['Entertainment', 'Subscriptions', 'Dining', 'Shopping'].includes(bill.category) ||
-        ['Netflix', 'Spotify', 'Gym', 'Amazon Prime', 'Disney', 'Hulu'].some(keyword => 
+        ['Netflix', 'Spotify', 'Gym', 'Amazon Prime', 'Disney', 'Hulu'].some(keyword =>
           bill.name.toLowerCase().includes(keyword.toLowerCase())
         )
       )
     },
     'lifestyle': {
       categories: ['Living', 'Health', 'Personal'],
-      bills: bills.filter(bill => 
+      bills: bills.filter(bill =>
         ['Living', 'Health', 'Personal'].includes(bill.category) &&
-        !['Rent', 'Mortgage', 'Groceries'].some(keyword => 
+        !['Rent', 'Mortgage', 'Groceries'].some(keyword =>
           bill.name.toLowerCase().includes(keyword.toLowerCase())
         )
       )
@@ -549,7 +543,7 @@ export const getDebtReductionSuggestions = (
   if (billCategories['non-negotiable'].bills.length > 0) {
     const total = billCategories['non-negotiable'].bills.reduce((sum, bill) => sum + bill.amount, 0)
     const percentage = (total / monthlyIncome) * 100
-    
+
     suggestions.push({
       category: 'Essential Expenses (Non-Negotiable)',
       type: 'non-negotiable',
@@ -569,7 +563,7 @@ export const getDebtReductionSuggestions = (
   // Negotiable expenses - can be reduced or eliminated
   if (billCategories['negotiable'].bills.length > 0) {
     const total = billCategories['negotiable'].bills.reduce((sum, bill) => sum + bill.amount, 0)
-    
+
     suggestions.push({
       category: 'Entertainment & Subscriptions (Negotiable)',
       type: 'negotiable',
@@ -590,7 +584,7 @@ export const getDebtReductionSuggestions = (
   // Lifestyle expenses - partially negotiable
   if (billCategories['lifestyle'].bills.length > 0) {
     const total = billCategories['lifestyle'].bills.reduce((sum, bill) => sum + bill.amount, 0)
-    
+
     suggestions.push({
       category: 'Lifestyle & Personal (Partially Negotiable)',
       type: 'lifestyle',
@@ -643,7 +637,7 @@ export const generateCalendarEvents = (
   const events: any[] = []
   const today = new Date()
   const threeMonthsOut = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate())
-  
+
   // Add paycheck events
   payDates.forEach((date, index) => {
     const payDate = new Date(date + 'T00:00:00')
@@ -659,12 +653,12 @@ export const generateCalendarEvents = (
       })
     }
   })
-  
+
   // Add bill events (recurring for next 3 months)
   bills.filter(bill => bill.isActive).forEach(bill => {
     const startDate = new Date(bill.dueDate + 'T00:00:00')
     let currentDate = new Date(startDate)
-    
+
     // Generate occurrences for next 3 months
     while (currentDate <= threeMonthsOut) {
       events.push({
@@ -677,7 +671,7 @@ export const generateCalendarEvents = (
         relatedId: bill.id,
         category: bill.category
       })
-      
+
       // Calculate next occurrence based on frequency
       switch (bill.frequency) {
         case 'weekly':
@@ -700,7 +694,7 @@ export const generateCalendarEvents = (
       }
     }
   })
-  
+
   // Add goal milestone events
   goals.filter(goal => goal.isActive).forEach(goal => {
     const targetDate = new Date(goal.targetDate + 'T00:00:00')
@@ -718,12 +712,12 @@ export const generateCalendarEvents = (
       })
     }
   })
-  
+
   // Add debt payment events
   debts.filter(debt => debt.isActive).forEach(debt => {
     const startDate = new Date(debt.dueDate + 'T00:00:00')
     let currentDate = new Date(startDate)
-    
+
     // Generate monthly debt payments for next 3 months
     while (currentDate <= threeMonthsOut) {
       events.push({
@@ -736,11 +730,11 @@ export const generateCalendarEvents = (
         relatedId: debt.id,
         category: 'debt'
       })
-      
+
       currentDate.setMonth(currentDate.getMonth() + 1)
     }
   })
-  
+
   return events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 }
 
@@ -749,11 +743,11 @@ export const calculateGoalProgress = (goal: any): { progressPercentage: number; 
   const targetDate = new Date(goal.targetDate)
   const today = new Date()
   const monthsRemaining = Math.max(0, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30)))
-  
+
   const remainingAmount = goal.targetAmount - goal.currentAmount
   const requiredMonthlyContribution = monthsRemaining > 0 ? remainingAmount / monthsRemaining : 0
   const onTrack = goal.monthlyContribution >= requiredMonthlyContribution || progressPercentage >= 100
-  
+
   return {
     progressPercentage,
     monthsRemaining,
