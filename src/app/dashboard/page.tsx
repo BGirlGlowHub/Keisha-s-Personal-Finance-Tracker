@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Account, Bill, Debt, StewardshipSettings, FinancialSummary } from '@/types'
 import { getAccounts, getBills, getDebts, getSettingsFromStorage } from '@/utils/storage'
-import { calculateFinancialSummary, calculateCurrentMonthIncome, formatCurrency, formatPercentage } from '@/utils/calculations'
+import { calculateFinancialSummary, calculateCurrentMonthIncome, getPayPeriodBreakdown, formatCurrency, formatPercentage } from '@/utils/calculations'
 import { loadSampleData, clearAllSampleData } from '@/utils/sampleData'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
@@ -64,7 +64,7 @@ export default function DashboardPage() {
     const pieData = []
     const barData = []
     
-    const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [])
+    const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [], settings.nextPayDate)
     
     // Tithing
     if (settings.tithingEnabled) {
@@ -279,6 +279,29 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Pay Period Breakdown */}
+        {settings && settings.nextPayDate && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-green-800 mb-4">💰 Pay Period Breakdown</h3>
+            <div className="grid md:grid-cols-3 gap-4">
+              {getPayPeriodBreakdown(settings.paycheckAmount, settings.payFrequency, settings.nextPayDate, 3).map((monthData, index) => (
+                <div key={index} className="bg-white rounded-lg p-4 border">
+                  <h4 className="font-semibold text-gray-900 mb-2">{monthData.month}</h4>
+                  <p className="text-2xl font-bold text-green-600 mb-1">{formatCurrency(monthData.totalIncome)}</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {monthData.payPeriods} paycheck{monthData.payPeriods !== 1 ? 's' : ''} × {formatCurrency(settings.paycheckAmount)}
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    {monthData.dates.map((date, i) => (
+                      <div key={i}>Pay Period {i + 1}: {new Date(date + 'T00:00:00').toLocaleDateString()}</div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Faith-Based Message */}
         {settings.faithBasedMode && (
           <div className="bg-faith-50 border border-faith-200 rounded-lg p-6 mb-8">
@@ -383,7 +406,7 @@ export default function DashboardPage() {
                     <div className="text-right">
                       <p className="font-semibold">{formatPercentage(account.payrollPercentage)}</p>
                       <p className="text-sm text-gray-600">
-                        {formatCurrency((calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || []) * account.payrollPercentage) / 100)}/month
+                        {formatCurrency((calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [], settings.nextPayDate) * account.payrollPercentage) / 100)}/month
                       </p>
                     </div>
                   </div>
