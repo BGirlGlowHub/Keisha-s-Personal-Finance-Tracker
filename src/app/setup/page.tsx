@@ -12,6 +12,7 @@ const SETUP_STEPS = {
   PAYFREQUENCY: 'payfrequency',
   TITHING: 'tithing',
   SAVINGS: 'savings',
+  POCKET_MONEY: 'pocket_money',
   COMPLETE: 'complete'
 } as const
 
@@ -25,6 +26,7 @@ export default function SetupPage() {
     tithingEnabled: true,
     tithingPercentage: 10,
     emergencyFundPercentage: 5,
+    pocketMoneyPercentage: 0,
     paycheckAmount: 0,
     payFrequency: 'bi-weekly',
     nextPayDate: '',
@@ -50,6 +52,9 @@ export default function SetupPage() {
         setCurrentStep(SETUP_STEPS.SAVINGS)
         break
       case SETUP_STEPS.SAVINGS:
+        setCurrentStep(SETUP_STEPS.POCKET_MONEY)
+        break
+      case SETUP_STEPS.POCKET_MONEY:
         setCurrentStep(SETUP_STEPS.COMPLETE)
         break
       case SETUP_STEPS.COMPLETE:
@@ -73,8 +78,11 @@ export default function SetupPage() {
       case SETUP_STEPS.SAVINGS:
         setCurrentStep(settings.tithingEnabled ? SETUP_STEPS.TITHING : SETUP_STEPS.PAYFREQUENCY)
         break
-      case SETUP_STEPS.COMPLETE:
+      case SETUP_STEPS.POCKET_MONEY:
         setCurrentStep(SETUP_STEPS.SAVINGS)
+        break
+      case SETUP_STEPS.COMPLETE:
+        setCurrentStep(SETUP_STEPS.POCKET_MONEY)
         break
     }
   }
@@ -232,11 +240,9 @@ export default function SetupPage() {
 
   const generatePayDates = (frequency: string, startDate: string) => {
     const dates = []
-    const start = new Date(startDate + 'T00:00:00') // Ensure we're using local timezone
-    
-    for (let i = 0; i < 12; i++) { // Generate next 12 pay periods
+    const start = new Date(startDate + 'T00:00:00')
+    for (let i = 0; i < 12; i++) {
       let payDate
-      
       switch (frequency) {
         case 'weekly':
           payDate = new Date(start)
@@ -247,7 +253,6 @@ export default function SetupPage() {
           payDate.setDate(start.getDate() + (i * 14))
           break
         case 'semi-monthly':
-          // 1st and 15th of each month
           payDate = new Date(start.getFullYear(), start.getMonth(), 1)
           if (i % 2 === 0) {
             payDate.setMonth(start.getMonth() + Math.floor(i / 2))
@@ -264,15 +269,12 @@ export default function SetupPage() {
         default:
           payDate = new Date(start)
       }
-      
-      // Format as YYYY-MM-DD
       const year = payDate.getFullYear()
       const month = String(payDate.getMonth() + 1).padStart(2, '0')
       const day = String(payDate.getDate()).padStart(2, '0')
       const formattedDate = `${year}-${month}-${day}`
       dates.push(formattedDate)
     }
-    
     return dates
   }
 
@@ -401,7 +403,7 @@ export default function SetupPage() {
             <div className="flex justify-between font-medium border-t pt-2 mt-2">
               <span>Remaining for bills & expenses:</span>
               <span>
-                {(100 - settings.tithingPercentage - settings.emergencyFundPercentage).toFixed(1)}%
+                {(100 - (settings.tithingPercentage ?? 0) - (settings.emergencyFundPercentage ?? 0)).toFixed(1)}%
               </span>
             </div>
           </div>
@@ -413,7 +415,61 @@ export default function SetupPage() {
           Back
         </button>
         <button onClick={nextStep} className={settings.faithBasedMode ? 'btn-faith flex-1' : 'btn-primary flex-1'}>
-          Complete Setup
+          Continue
+        </button>
+      </div>
+    </div>
+  )
+
+  // POCKET MONEY STEP
+  const renderPocketMoneyStep = () => (
+    <div className="max-w-xl mx-auto">
+      <h2 className="text-3xl font-bold text-center mb-6">
+        {settings.faithBasedMode
+          ? 'Set Your Pocket Money (What Do You Want Left for Fun?)'
+          : 'How Much "Fun Money" Do You Want Each Month?'}
+      </h2>
+      <p className="text-gray-600 text-center mb-8">
+        {settings.faithBasedMode
+          ? 'After honoring God and saving, choose how much you want to set aside for personal enjoyment, hobbies, or treats each paycheck.'
+          : 'After saving, what percentage of your income would you like to dedicate to personal spending (fun, hobbies, treats)?'}
+      </p>
+      <div className="card">
+        <label className="label">Pocket Money Percentage</label>
+        <div className="flex items-center gap-4">
+          <input
+            type="range"
+            min="0"
+            max="20"
+            step="0.5"
+            value={settings.pocketMoneyPercentage}
+            onChange={(e) =>
+              updateSettings({ pocketMoneyPercentage: parseFloat(e.target.value) })
+            }
+            className="flex-1"
+          />
+          <div className="text-right min-w-[80px]">
+            <div className="text-lg font-semibold">
+              {settings.pocketMoneyPercentage}%
+            </div>
+            <div className="text-sm text-gray-500">
+              ${((settings.paycheckAmount * settings.pocketMoneyPercentage) / 100).toFixed(0)}
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
+          <h4 className="font-semibold text-yellow-800 mb-2">Be Intentional</h4>
+          <p className="text-sm text-yellow-700">
+            Setting aside money for personal use ensures you can enjoy life while staying on budget.
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-4 mt-8">
+        <button onClick={prevStep} className="btn-secondary flex-1">
+          Back
+        </button>
+        <button onClick={nextStep} className="btn-primary flex-1">
+          Continue
         </button>
       </div>
     </div>
@@ -442,9 +498,13 @@ export default function SetupPage() {
             <span className="font-medium">{settings.emergencyFundPercentage}%</span>
           </div>
           <div className="flex justify-between">
+            <span>🪙 Pocket Money (Personal wishes):</span>
+            <span className="font-medium">{settings.pocketMoneyPercentage ?? 0}%</span>
+          </div>
+          <div className="flex justify-between">
             <span>📋 Available for Bills & Goals:</span>
             <span className="font-medium">
-              {(100 - settings.tithingPercentage - settings.emergencyFundPercentage).toFixed(1)}%
+              {(100 - (settings.tithingPercentage ?? 0) - (settings.emergencyFundPercentage ?? 0) - (settings.pocketMoneyPercentage ?? 0)).toFixed(1)}%
             </span>
           </div>
         </div>
@@ -463,11 +523,10 @@ export default function SetupPage() {
       { key: SETUP_STEPS.PAYFREQUENCY, label: 'Pay Schedule' },
       ...(settings.tithingEnabled ? [{ key: SETUP_STEPS.TITHING, label: 'Tithing' }] : []),
       { key: SETUP_STEPS.SAVINGS, label: 'Savings' },
+      { key: SETUP_STEPS.POCKET_MONEY, label: 'Pocket Money' },
       { key: SETUP_STEPS.COMPLETE, label: 'Complete' }
     ]
-    
     const currentIndex = steps.findIndex(step => step.key === currentStep)
-    
     return (
       <div className="flex justify-center mb-8">
         <div className="flex items-center space-x-2">
@@ -520,6 +579,7 @@ export default function SetupPage() {
           {currentStep === SETUP_STEPS.PAYFREQUENCY && renderPayFrequencyStep()}
           {currentStep === SETUP_STEPS.TITHING && renderTithingStep()}
           {currentStep === SETUP_STEPS.SAVINGS && renderSavingsStep()}
+          {currentStep === SETUP_STEPS.POCKET_MONEY && renderPocketMoneyStep()}
           {currentStep === SETUP_STEPS.COMPLETE && renderCompleteStep()}
         </div>
       </div>
