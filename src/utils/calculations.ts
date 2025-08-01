@@ -143,29 +143,48 @@ export const calculateFinancialSummary = (
   const activeAccounts = accounts.filter(account => account.isActive)
   const activeBills = bills.filter(bill => bill.isActive)
 
-  const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [], settings.nextPayDate)
+  // Accurate monthly income for the current month
+  const monthlyIncome = calculateCurrentMonthIncome(
+    settings.paycheckAmount,
+    settings.payFrequency,
+    settings.payDates || [],
+    settings.nextPayDate
+  )
+
+  // Faith-based deductions: get percentages from settings or use defaults if missing
+  const tithingPercentage = settings.tithingEnabled ? (settings.tithingPercentage ?? 10) : 0
+  const savingsPercentage = settings.savingsPercentage ?? 0
+  const pocketMoneyPercentage = settings.pocketMoneyPercentage ?? 0
+
+  // Calculate deduction amounts (always from monthlyIncome!)
+  const totalTithing = (monthlyIncome * tithingPercentage) / 100
+  const totalSavings = (monthlyIncome * savingsPercentage) / 100
+  const totalPocketMoney = (monthlyIncome * pocketMoneyPercentage) / 100
+
+  // Subtract tithing, savings, pocket money from gross income
+  const incomeAfterFaithDeductions = monthlyIncome - totalTithing - totalSavings - totalPocketMoney
+
+  // Bills and allocations
   const totalBills = calculateTotalBillsAmount(activeBills)
   const totalAllocated = calculateTotalAccountPercentages(activeAccounts)
 
-  const tithingAccounts = activeAccounts.filter(account => account.category === 'tithing')
-  const savingsAccounts = activeAccounts.filter(account => account.category === 'savings')
+  // Remaining balance after all deductions and bills
+  const remainingBalance = incomeAfterFaithDeductions - totalBills
 
-  const totalTithing = tithingAccounts.reduce((sum, account) =>
-    sum + ((monthlyIncome * account.payrollPercentage) / 100), 0)
-
-  const totalSavings = savingsAccounts.reduce((sum, account) =>
-    sum + ((monthlyIncome * account.payrollPercentage) / 100), 0)
-
-  const remainingBalance = monthlyIncome - (monthlyIncome * totalAllocated / 100)
+  // For completeness: allocation percentage (what % of income is assigned)
+  const allocationPercentage = (
+    (totalTithing + totalSavings + totalPocketMoney + totalBills) / monthlyIncome
+  ) * 100
 
   return {
     totalIncome: monthlyIncome,
-    totalAllocated: (monthlyIncome * totalAllocated) / 100,
-    totalBills,
-    totalSavings,
     totalTithing,
+    totalSavings,
+    totalPocketMoney,
+    totalBills,
     remainingBalance,
-    allocationPercentage: totalAllocated
+    allocationPercentage
+    // Add other fields required by your FinancialSummary type as needed
   }
 }
 
