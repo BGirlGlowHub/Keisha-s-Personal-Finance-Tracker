@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Account, Bill, Debt, StewardshipSettings, FinancialSummary } from '@/types'
 import { getAccounts, getBills, getDebts, getSettingsFromStorage } from '@/utils/storage'
-import { calculateFinancialSummary, calculateMonthlyIncome, formatCurrency, formatPercentage } from '@/utils/calculations'
+import { calculateFinancialSummary, calculateCurrentMonthIncome, formatCurrency, formatPercentage } from '@/utils/calculations'
 import { loadSampleData, clearAllSampleData } from '@/utils/sampleData'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
@@ -64,7 +64,7 @@ export default function DashboardPage() {
     const pieData = []
     const barData = []
     
-    const monthlyIncome = calculateMonthlyIncome(settings.paycheckAmount, settings.payFrequency)
+    const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [])
     
     // Tithing
     if (settings.tithingEnabled) {
@@ -137,8 +137,11 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Financial Dashboard - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h1>
               <p className="text-gray-600 mt-1">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} • 
                 {settings.faithBasedMode ? 'Faith-based stewardship' : 'Secular approach'} • 
                 {settings.payFrequency.charAt(0).toUpperCase() + settings.payFrequency.slice(1).replace('-', ' ')}: {formatCurrency(settings.paycheckAmount)}
                 {settings.nextPayDate && (
@@ -345,7 +348,7 @@ export default function DashboardPage() {
                     <div className="text-right">
                       <p className="font-semibold">{formatPercentage(account.payrollPercentage)}</p>
                       <p className="text-sm text-gray-600">
-                        {formatCurrency((calculateMonthlyIncome(settings.paycheckAmount, settings.payFrequency) * account.payrollPercentage) / 100)}/month
+                        {formatCurrency((calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || []) * account.payrollPercentage) / 100)}/month
                       </p>
                     </div>
                   </div>
