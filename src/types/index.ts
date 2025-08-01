@@ -71,7 +71,8 @@ export interface StewardshipSettings {
   tithingEnabled: boolean;
   tithingPercentage: number;
   emergencyFundPercentage: number;
-  pocketMoneyPercentage?: number; // Optional - Personal spending money after priorities
+  savingsPercentage?: number;           // <-- NEW FIELD FOR GENERAL SAVINGS
+  pocketMoneyPercentage?: number;       // Optional - Personal spending money after priorities
   paycheckAmount: number;
   payFrequency: 'weekly' | 'bi-weekly' | 'semi-monthly' | 'monthly';
   nextPayDate: string;
