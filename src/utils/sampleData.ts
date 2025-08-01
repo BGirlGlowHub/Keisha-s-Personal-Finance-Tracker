@@ -14,10 +14,10 @@ export const loadSampleData = () => {
     tithingEnabled: true,
     tithingPercentage: 10,
     emergencyFundPercentage: 5,
-    paycheckAmount: 2000, // Bi-weekly paycheck
+    paycheckAmount: 1500, // Bi-weekly paycheck (updated to match your example)
     payFrequency: 'bi-weekly',
-    nextPayDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Next week
-    payDates: []
+    nextPayDate: '2024-08-15',
+    payDates: ['2024-08-01', '2024-08-15', '2024-08-29'] // 3 paychecks in August
   }
 
   // Sample Accounts - 10 realistic accounts with proper percentage distribution
