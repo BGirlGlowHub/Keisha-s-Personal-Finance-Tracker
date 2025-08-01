@@ -33,6 +33,29 @@ export const calculateMonthlyIncome = (paycheckAmount: number, frequency: string
   }
 }
 
+// Calculate income for specific month based on actual paycheck dates
+export const calculateCurrentMonthIncome = (
+  paycheckAmount: number, 
+  frequency: string, 
+  payDates: string[]
+): number => {
+  const currentMonth = new Date().getMonth()
+  const currentYear = new Date().getFullYear()
+  
+  // Count paychecks in current month
+  const paychecksThisMonth = payDates.filter(dateStr => {
+    const payDate = new Date(dateStr + 'T00:00:00')
+    return payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear
+  }).length
+  
+  // If no payDates provided, fall back to average calculation
+  if (payDates.length === 0) {
+    return calculateMonthlyIncome(paycheckAmount, frequency)
+  }
+  
+  return paycheckAmount * paychecksThisMonth
+}
+
 export const calculateFinancialSummary = (
   accounts: Account[],
   bills: Bill[],
@@ -41,7 +64,7 @@ export const calculateFinancialSummary = (
   const activeAccounts = accounts.filter(account => account.isActive)
   const activeBills = bills.filter(bill => bill.isActive)
   
-  const monthlyIncome = calculateMonthlyIncome(settings.paycheckAmount, settings.payFrequency)
+  const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [])
   const totalBills = calculateTotalBillsAmount(activeBills)
   const totalAllocated = calculateTotalAccountPercentages(activeAccounts)
   
