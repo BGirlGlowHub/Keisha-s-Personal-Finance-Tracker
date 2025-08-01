@@ -14,6 +14,7 @@ export const loadSampleData = () => {
     tithingEnabled: true,
     tithingPercentage: 10,
     emergencyFundPercentage: 5,
+    pocketMoneyPercentage: 10, // 10% for personal spending
     paycheckAmount: 1500, // Bi-weekly paycheck (updated to match your example)
     payFrequency: 'bi-weekly',
     nextPayDate: '2024-08-15',
@@ -398,6 +399,7 @@ export const clearAllSampleData = () => {
     tithingEnabled: true,
     tithingPercentage: 10,
     emergencyFundPercentage: 5,
+    pocketMoneyPercentage: 0,
     paycheckAmount: 0,
     payFrequency: 'bi-weekly',
     nextPayDate: '',
