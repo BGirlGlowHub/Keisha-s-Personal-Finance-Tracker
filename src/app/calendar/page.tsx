@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Calendar from '@/components/Calendar'
+import Navigation from '@/components/Navigation'
 import { CalendarEvent, Account, Bill, Debt, SavingsGoal, StewardshipSettings } from '@/types'
 import { getAccounts, getBills, getDebts, getSavingsGoals, getSettingsFromStorage } from '@/utils/storage'
 import { generateCalendarEvents, formatCurrency, calculateGoalProgress } from '@/utils/calculations'
@@ -116,6 +117,7 @@ export default function CalendarPage() {
               <Link href="/goals" className="btn-primary">
                 Manage Goals
               </Link>
+              <Navigation />
             </div>
           </div>
         </div>
