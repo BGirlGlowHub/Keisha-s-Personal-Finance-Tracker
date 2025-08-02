@@ -187,7 +187,7 @@ export const calculateFinancialSummary = (
     remainingBalance,
     allocationPercentage
   }
-
+}
 export const calculateOptimalPercentages = (
   bills: Bill[],
   settings: StewardshipSettings
