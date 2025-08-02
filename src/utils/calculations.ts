@@ -179,7 +179,7 @@ export const calculateFinancialSummary = (
   return {
     totalIncome: monthlyIncome,
     totalAllocated: totalTithing + totalSavings +
-  totalPocketMoney + totalBills, 
+  totalPocketMoney + totalBills,
     totalBills,
     totalSavings,
     totalTithing,
