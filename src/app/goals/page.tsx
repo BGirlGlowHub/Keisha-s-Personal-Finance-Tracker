@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Navigation from'@/components/Navigation'
+import Navigation from '@/components/Navigation'
 import { useForm } from 'react-hook-form'
 import { SavingsGoal, Account, StewardshipSettings } from '@/types'
 import { getSavingsGoals, saveSavingsGoals, getAccounts, getSettingsFromStorage } from '@/utils/storage'
