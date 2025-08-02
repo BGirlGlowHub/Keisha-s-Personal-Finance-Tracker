@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [debts, setDebts] = useState<Debt[]>([])
   const [settings, setSettings] = useState<StewardshipSettings | null>(null)
   const [summary, setSummary] = useState<FinancialSummary | null>(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   useEffect(() => {
     const loadedAccounts = getAccounts()
@@ -135,7 +136,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Financial Dashboard - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -149,38 +150,108 @@ export default function DashboardPage() {
                 )}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/setup" className="btn-secondary">
-                Edit Income/Schedule
-              </Link>
-              <Link href="/calendar" className="btn-primary">
-                Calendar
-              </Link>
-              <Link href="/goals" className="btn-secondary">
-                Goals
-              </Link>
-              <Link href="/accounts" className="btn-secondary">
-                Accounts
-              </Link>
-              <Link href="/bills" className="btn-secondary">
-                Bills
-              </Link>
-              <Link href="/debts" className="btn-secondary">
-                Debts
-              </Link>
+            
+            {/* Navigation Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <span>Navigate</span>
+                <svg className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-200">
+                  <Link href="/setup" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    <span className="mr-3">⚙️</span>
+                    Edit Income/Schedule
+                  </Link>
+                  <Link href="/calendar" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    <span className="mr-3">📅</span>
+                    Calendar
+                  </Link>
+                  <Link href="/goals" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    <span className="mr-3">🎯</span>
+                    Goals
+                  </Link>
+                  <Link href="/accounts" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    <span className="mr-3">🏦</span>
+                    Accounts
+                  </Link>
+                  <Link href="/bills" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    <span className="mr-3">📋</span>
+                    Bills
+                  </Link>
+                  <Link href="/debts" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    <span className="mr-3">💳</span>
+                    Debts
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
+          
+          {/* Financial Summary Cards - Now in Header */}
+          {summary && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600">Gross Income</p>
+                <p className="text-xl font-bold text-gray-900">{formatCurrency(summary.totalIncome)}</p>
+                <p className="text-xs text-gray-500">
+                  {settings.payDates?.filter(date => {
+                    const payDate = new Date(date + 'T00:00:00')
+                    const current = new Date()
+                    return payDate.getMonth() === current.getMonth() && payDate.getFullYear() === current.getFullYear()
+                  }).length || 0} paychecks
+                </p>
+              </div>
+              
+              <div className="bg-blue-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600">Total Allocated</p>
+                <p className="text-xl font-bold text-blue-600">{formatCurrency(summary.totalAllocated)}</p>
+                <p className="text-xs text-gray-500">{formatPercentage(summary.allocationPercentage)}</p>
+              </div>
+              
+              {settings.tithingEnabled && (
+                <div className="bg-faith-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-600">Tithing</p>
+                  <p className="text-xl font-bold text-faith-600">{formatCurrency(summary.totalTithing)}</p>
+                  <p className="text-xs text-gray-500">{formatPercentage(settings.tithingPercentage)}</p>
+                </div>
+              )}
+              
+              <div className="bg-red-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600">Total Debt</p>
+                <p className={`text-xl font-bold ${totalDebtBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {totalDebtBalance > 0 ? formatCurrency(totalDebtBalance) : 'Debt Free!'}
+                </p>
+              </div>
+              
+              <div className="bg-green-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600">After Priorities</p>
+                <p className="text-xl font-bold text-blue-600">
+                  {formatCurrency(summary.totalIncome - summary.totalTithing - (summary.totalIncome * (settings.emergencyFundPercentage || 0) / 100))}
+                </p>
+                <p className="text-xs text-gray-500">Available for bills</p>
+              </div>
+              
+              <div className="bg-purple-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600">Pocket Money</p>
+                <p className="text-xl font-bold text-purple-600">
+                  {formatCurrency((summary.totalIncome * (settings.pocketMoneyPercentage || 0)) / 100)}
+                </p>
+                <p className="text-xs text-gray-500">{formatPercentage(settings.pocketMoneyPercentage || 0)}</p>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Financial Summary Cards */}
-        {summary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Gross Income (This Month)</p>
+        {/* Cards moved to header - keeping this section for Pay Period Breakdown */}
                   <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.totalIncome)}</p>
                   <p className="text-xs text-gray-500">
                     {settings.payDates?.filter(date => {
