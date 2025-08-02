@@ -142,52 +142,39 @@ export const calculateFinancialSummary = (
 ): FinancialSummary => {
   const activeAccounts = accounts.filter(account => account.isActive)
   const activeBills = bills.filter(bill => bill.isActive)
-
-  // Accurate monthly income for the current month
-  const monthlyIncome = calculateCurrentMonthIncome(
-    settings.paycheckAmount,
-    settings.payFrequency,
-    settings.payDates || [],
-    settings.nextPayDate
-  )
-
-  // Faith-based deductions: get percentages from settings or use defaults if missing
-  const tithingPercentage = settings.tithingEnabled ? (settings.tithingPercentage ?? 10) : 0
-  const savingsPercentage = settings.emergencyFundPercentage ?? 0
-  const pocketMoneyPercentage = settings.pocketMoneyPercentage ?? 0
-
-  // Calculate deduction amounts (always from monthlyIncome!)
-  const totalTithing = (monthlyIncome * tithingPercentage) / 100
-  const totalSavings = (monthlyIncome * savingsPercentage) / 100
-  const totalPocketMoney = (monthlyIncome * pocketMoneyPercentage) / 100
-
-  // Subtract tithing, savings, pocket money from gross income
-  const incomeAfterFaithDeductions = monthlyIncome - totalTithing - totalSavings - totalPocketMoney
-
-  // Bills and allocations
+  
+  const monthlyIncome = calculateCurrentMonthIncome(settings.paycheckAmount, settings.payFrequency, settings.payDates || [], settings.nextPayDate)
   const totalBills = calculateTotalBillsAmount(activeBills)
   const totalAllocated = calculateTotalAccountPercentages(activeAccounts)
-
-  // Remaining balance after all deductions and bills
-  const remainingBalance = incomeAfterFaithDeductions - totalBills
-
-  // For completeness: allocation percentage (what % of income is assigned)
-  const allocationPercentage = (
-    (totalTithing + totalSavings + totalPocketMoney + totalBills) / monthlyIncome
-  ) * 100
-
+  
+  const tithingAccounts = activeAccounts.filter(account => account.category === 'tithing')
+  const savingsAccounts = activeAccounts.filter(account => account.category === 'savings')
+  
+  const totalTithing = tithingAccounts.reduce((sum, account) => 
+    sum + ((monthlyIncome * account.payrollPercentage) / 100), 0)
+  
+  const totalSavings = savingsAccounts.reduce((sum, account) => 
+    sum + ((monthlyIncome * account.payrollPercentage) / 100), 0)
+  
+  const remainingBalance = monthlyIncome - (monthlyIncome * totalAllocated / 100)
+  
+  // Calculate "After Priorities" amount
+  const emergencyAmount = monthlyIncome * (settings.emergencyFundPercentage || 0) / 100
+  const pocketMoneyAmount = monthlyIncome * (settings.pocketMoneyPercentage || 0) / 100
+  const afterPriorities = monthlyIncome - totalTithing - emergencyAmount - pocketMoneyAmount
+  
   return {
     totalIncome: monthlyIncome,
-    totalAllocated: totalTithing + totalSavings +
-  totalPocketMoney + totalBills,
+    totalAllocated: (monthlyIncome * totalAllocated) / 100,
     totalBills,
     totalSavings,
     totalTithing,
-    totalPocketMoney,
     remainingBalance,
-    allocationPercentage
+    allocationPercentage: totalAllocated,
+    afterPriorities // New field with the "After Priorities" calculation
   }
 }
+
 export const calculateOptimalPercentages = (
   bills: Bill[],
   settings: StewardshipSettings
