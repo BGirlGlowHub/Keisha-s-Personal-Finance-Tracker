@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Navigation from '@/components/Navigation'
 import { useForm } from 'react-hook-form'
 import { Account, AccountCategory, StewardshipSettings } from '@/types'
 import { getAccounts, saveAccounts, getSettingsFromStorage } from '@/utils/storage'
@@ -152,6 +153,7 @@ export default function AccountsPage() {
             >
               Add Account
             </button>
+            <Navigation />
           </div>
         </div>
       </header>
