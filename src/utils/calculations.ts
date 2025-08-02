@@ -153,7 +153,7 @@ export const calculateFinancialSummary = (
 
   // Faith-based deductions: get percentages from settings or use defaults if missing
   const tithingPercentage = settings.tithingEnabled ? (settings.tithingPercentage ?? 10) : 0
-  const savingsPercentage = settings.savingsPercentage ?? 0
+  const savingsPercentage = settings.emergencyFundPercentage ?? 0
   const pocketMoneyPercentage = settings.pocketMoneyPercentage ?? 0
 
   // Calculate deduction amounts (always from monthlyIncome!)
@@ -178,15 +178,15 @@ export const calculateFinancialSummary = (
 
   return {
     totalIncome: monthlyIncome,
-    totalTithing,
-    totalSavings,
-    totalPocketMoney,
+    totalAllocated: totalTithing + totalSavings +
+  totalPocketMoney + totalBills, 
     totalBills,
+    totalSavings,
+    totalTithing,
+    totalPocketMoney,
     remainingBalance,
     allocationPercentage
-    // Add other fields required by your FinancialSummary type as needed
   }
-}
 
 export const calculateOptimalPercentages = (
   bills: Bill[],
