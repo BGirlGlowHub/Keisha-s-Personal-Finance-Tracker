@@ -60,7 +60,7 @@ export default function BillsPage() {
       const balances = calculateAccountBalances(loadedAccounts, loadedBills, loadedSettings)
       setAccountBalances(balances)
     }
-  }, [bills, accounts, settings])
+  }, [])
 
   const onSubmit = (data: BillFormData) => {
     if (editingBill) {
