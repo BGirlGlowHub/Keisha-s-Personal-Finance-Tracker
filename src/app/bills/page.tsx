@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Navigation from '@/components/Navigation'
 import { useForm } from 'react-hook-form'
 import { Bill, Account, StewardshipSettings } from '@/types'
 import { getBills, saveBills, getAccounts, getSettingsFromStorage } from '@/utils/storage'
@@ -205,6 +206,7 @@ export default function BillsPage() {
               >
                 Add Bill
               </button>
+              <Navigation />
             </div>
           </div>
         </div>
