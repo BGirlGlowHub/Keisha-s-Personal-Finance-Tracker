@@ -71,8 +71,7 @@ export interface StewardshipSettings {
   tithingEnabled: boolean;
   tithingPercentage: number;
   emergencyFundPercentage: number;
-  savingsPercentage?: number;           // <-- NEW FIELD FOR GENERAL SAVINGS
-  pocketMoneyPercentage?: number;       // Optional - Personal spending money after priorities
+  pocketMoneyPercentage?: number; // Optional - Personal spending money after priorities
   paycheckAmount: number;
   payFrequency: 'weekly' | 'bi-weekly' | 'semi-monthly' | 'monthly';
   nextPayDate: string;
@@ -112,9 +111,9 @@ export interface FinancialSummary {
   totalBills: number;
   totalSavings: number;
   totalTithing: number;
-  totalPocketMoney: number;   // <-- Add this line
   remainingBalance: number;
   allocationPercentage: number;
+  afterPriorities: number; // Added new field for "After Priorities" calculation
 }
 
 export type AccountCategory = 'tithing' | 'savings' | 'bills' | 'expenses' | 'debt';
