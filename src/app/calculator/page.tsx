@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Navigation from'@/components/Navigation'
 import { Account, Bill, StewardshipSettings } from '@/types'
 import { getAccounts, getBills, getSettingsFromStorage } from '@/utils/storage'
 import { formatCurrency, formatPercentage, calculateBillPercentage } from '@/utils/calculations'
