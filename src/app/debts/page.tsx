@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Navigation from '@/components/Navigation'
 import { useForm } from 'react-hook-form'
 import { Debt, Account, StewardshipSettings } from '@/types'
 import { getDebts, saveDebts, getAccounts, getSettingsFromStorage, getBills } from '@/utils/storage'
@@ -229,6 +230,7 @@ export default function DebtsPage() {
             >
               Add Debt
             </button>
+             <Navigation />
           </div>
         </div>
       </header>
