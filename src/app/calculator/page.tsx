@@ -194,10 +194,15 @@ export default function CalculatorPage() {
                 💡 Take these percentages to HR/Payroll to set up automatic direct deposit splits for EACH paycheck - your bills will be paid before you even see the money!
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Net Paycheck</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(settings.paycheckAmount)}</p>
-            </div>
+            <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Net
+  Paycheck</p>
+                  <p className="text-2xl font-bold text-gra
+  y-900">{formatCurrency(settings.paycheckAmount)}</p>
+                </div>
+                <Navigation />
+              </div>
           </div>
         </div>
       </header>
