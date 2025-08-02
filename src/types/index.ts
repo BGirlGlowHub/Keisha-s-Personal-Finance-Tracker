@@ -112,6 +112,7 @@ export interface FinancialSummary {
   totalBills: number;
   totalSavings: number;
   totalTithing: number;
+  totalPocketMoney: number;   // <-- Add this line
   remainingBalance: number;
   allocationPercentage: number;
 }
